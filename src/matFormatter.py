@@ -7,13 +7,14 @@ import re
 # 全局变量用于控制多行矩阵的缩进空格数
 MATRIX_INDENT_SPACES = 4
 
-def format_matlab_matrix(code_string, indent_spaces=None):
+def format_matlab_matrix(code_string, indent_spaces=None, alignment='left'):
 	"""
 	格式化MATLAB代码中的矩阵，使各列元素对齐
 	
 	参数:
 		code_string: 包含MATLAB矩阵的字符串
 		indent_spaces: 多行矩阵的缩进空格数，默认为None，使用全局设置
+		alignment: 对齐方式，'left'表示左对齐，'right'表示右对齐，默认为'left'
 	
 	返回:
 		格式化后的字符串
@@ -70,12 +71,15 @@ def format_matlab_matrix(code_string, indent_spaces=None):
 			for i, elem in enumerate(row):
 				col_widths[i] = max(col_widths[i], len(elem))
 		
-		# 格式化每一行，右对齐数字
+		# 格式化每一行，根据指定的对齐方式对齐数字
 		formatted_rows = []
 		for row in matrix:
 			formatted_elements = []
 			for i in range(len(row)):
-				formatted_elements.append(row[i].rjust(col_widths[i]))
+				if alignment == 'right':
+					formatted_elements.append(row[i].rjust(col_widths[i]))
+				else:  # 默认左对齐
+					formatted_elements.append(row[i].ljust(col_widths[i]))
 			formatted_rows.append('  '.join(formatted_elements))
 		
 		# 组合成最终的矩阵字符串
