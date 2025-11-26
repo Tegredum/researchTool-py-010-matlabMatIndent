@@ -1,19 +1,26 @@
 # encoding: utf-8
-# author: claude-sonnet-4-5-20250929-thinking-32k
+# author: claude-sonnet-4-5-20250929-thinking-32k, Lingma
 # python version: 3.10.16
 
 import re
 
-def format_matlab_matrix(code_string):
+# 全局变量用于控制多行矩阵的缩进空格数
+MATRIX_INDENT_SPACES = 4
+
+def format_matlab_matrix(code_string, indent_spaces=None):
 	"""
 	格式化MATLAB代码中的矩阵，使各列元素对齐
 	
 	参数:
 		code_string: 包含MATLAB矩阵的字符串
+		indent_spaces: 多行矩阵的缩进空格数，默认为None，使用全局设置
 	
 	返回:
 		格式化后的字符串
 	"""
+	
+	# 如果提供了indent_spaces参数，则使用它，否则使用全局变量
+	actual_indent_spaces = indent_spaces if indent_spaces is not None else MATRIX_INDENT_SPACES
 	
 	def find_matching_bracket(s, start):
 		"""找到与start位置的'['匹配的']'位置"""
@@ -78,8 +85,9 @@ def format_matlab_matrix(code_string):
 		else:
 			# 多行矩阵
 			result = '[\n'
+			indent = ' ' * actual_indent_spaces
 			for row in formatted_rows:
-				result += '  ' + row + '\n'
+				result += indent + row + '\n'
 			result += ']'
 			return result
 	
@@ -134,3 +142,19 @@ if __name__ == "__main__":
 	matlab_code4 = """X = [1 2; 3 4]; Y = [10 20 30; 40 50 60]"""
 	print("示例4:")
 	print(format_matlab_matrix(matlab_code4))
+	print()
+	
+	# 示例5：测试默认4空格缩进
+	matlab_code5 = """D = [1 22 333; 4444 5 66; 7 88 999]"""
+	print("示例5 (默认4空格缩进):")
+	print(format_matlab_matrix(matlab_code5))
+	print()
+	
+	# 示例6：测试自定义缩进（2个空格）
+	print("示例6 (自定义2空格缩进):")
+	print(format_matlab_matrix(matlab_code5, indent_spaces=2))
+	print()
+	
+	# 示例7：测试自定义缩进（6个空格）
+	print("示例7 (自定义6空格缩进):")
+	print(format_matlab_matrix(matlab_code5, indent_spaces=6))
