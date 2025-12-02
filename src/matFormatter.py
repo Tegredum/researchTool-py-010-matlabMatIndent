@@ -79,6 +79,11 @@ def format_matlab_matrix(code_string, indent_spaces=None, alignment='left', form
 			for i, elem in enumerate(row):
 				col_widths[i] = max(col_widths[i], len(elem))
 		
+		# 调整每列宽度为actual_indent_spaces的倍数，并确保至少有一个空格间隔
+		for i in range(num_cols):
+			# 将列宽向上舍入到actual_indent_spaces的倍数
+			col_widths[i] = ((col_widths[i] // actual_indent_spaces) + 1) * actual_indent_spaces
+		
 		# 格式化每一行，根据指定的对齐方式对齐数字
 		formatted_rows = []
 		for row in matrix:
@@ -88,7 +93,7 @@ def format_matlab_matrix(code_string, indent_spaces=None, alignment='left', form
 					formatted_elements.append(row[i].rjust(col_widths[i]))
 				else:  # 默认左对齐
 					formatted_elements.append(row[i].ljust(col_widths[i]))
-			formatted_rows.append('  '.join(formatted_elements))
+			formatted_rows.append(''.join(formatted_elements))
 		
 		# 组合成最终的矩阵字符串
 		if len(formatted_rows) == 1:
