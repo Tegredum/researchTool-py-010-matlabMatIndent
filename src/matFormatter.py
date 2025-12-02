@@ -1,5 +1,5 @@
 # encoding: utf-8
-# author: claude-sonnet-4-5-20250929-thinking-32k, Lingma
+# author: claude-sonnet-4-5-20250929-thinking-32k, Lingma, Tegredum
 # python version: 3.10.16
 
 import re
@@ -7,7 +7,7 @@ import re
 # 全局变量用于控制多行矩阵的缩进空格数
 MATRIX_INDENT_SPACES = 4
 
-def format_matlab_matrix(code_string, indent_spaces=None, alignment='left'):
+def format_matlab_matrix(code_string, indent_spaces=None, alignment='left', format_style='semicolon'):
 	"""
 	格式化MATLAB代码中的矩阵，使各列元素对齐
 	
@@ -15,6 +15,7 @@ def format_matlab_matrix(code_string, indent_spaces=None, alignment='left'):
 		code_string: 包含MATLAB矩阵的字符串
 		indent_spaces: 多行矩阵的缩进空格数，默认为None，使用全局设置
 		alignment: 对齐方式，'left'表示左对齐，'right'表示右对齐，默认为'left'
+		format_style: 格式样式，'semicolon'表示使用分号和逗号，'space'表示使用空格和换行符，默认为'semicolon'
 	
 	返回:
 		格式化后的字符串
@@ -51,13 +52,20 @@ def format_matlab_matrix(code_string, indent_spaces=None, alignment='left'):
 		rows = re.split(r'[;\n]', content)
 		
 		matrix = []
-		for row in rows:
+		for rowIdx, row in enumerate(rows):
 			row = row.strip()
 			if row:
 				# 分割列元素（支持逗号、空格、制表符）
 				elements = re.split(r'[,\s]+', row)
 				elements = [e.strip() for e in elements if e.strip()]
 				if elements:
+					# semicolon 格式下，每行各个元素之间用逗号隔开，最后一个元素后面加分号，如果是最后一行则不作处理
+					if format_style =='semicolon' and len(elements) > 1:
+						for idx in range(len(elements)):
+							if idx < len(elements) - 1:
+								elements[idx] += ','	# 逗号分隔元素
+							elif rowIdx < len(rows) - 1:
+								elements[idx] += ';'	# 分号分隔行
 					matrix.append(elements)
 		
 		if not matrix:
