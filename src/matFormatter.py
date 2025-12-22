@@ -1,5 +1,5 @@
 # encoding: utf-8
-# author: claude-sonnet-4-5-20250929-thinking-32k, Lingma, Tegredum
+# author: claude-sonnet-4-5-20250929-thinking-32k, Lingma, Tegredum, Trae CN
 # python version: 3.10.16
 
 import re
@@ -7,7 +7,10 @@ import re
 # 全局变量用于控制多行矩阵的缩进空格数
 MATRIX_INDENT_SPACES = 4
 
-def format_matlab_matrix(code_string, indent_spaces=None, alignment='left', format_style='semicolon'):
+# 全局变量用于控制缩进类型，'space'表示空格，'tab'表示制表符
+MATRIX_INDENT_TYPE = 'tab'
+
+def format_matlab_matrix(code_string, indent_spaces=None, alignment='left', format_style='semicolon', indent_type=None):
 	"""
 	格式化MATLAB代码中的矩阵，使各列元素对齐
 	
@@ -16,6 +19,7 @@ def format_matlab_matrix(code_string, indent_spaces=None, alignment='left', form
 		indent_spaces: 多行矩阵的缩进空格数，默认为None，使用全局设置
 		alignment: 对齐方式，'left'表示左对齐，'right'表示右对齐，默认为'left'
 		format_style: 格式样式，'semicolon'表示使用分号和逗号，'space'表示使用空格和换行符，默认为'semicolon'
+		indent_type: 缩进类型，'space'表示使用空格，'tab'表示使用制表符，默认为None，使用全局设置
 	
 	返回:
 		格式化后的字符串
@@ -23,6 +27,9 @@ def format_matlab_matrix(code_string, indent_spaces=None, alignment='left', form
 	
 	# 如果提供了indent_spaces参数，则使用它，否则使用全局变量
 	actual_indent_spaces = indent_spaces if indent_spaces is not None else MATRIX_INDENT_SPACES
+	
+	# 如果提供了indent_type参数，则使用它，否则使用全局变量
+	actual_indent_type = indent_type if indent_type is not None else MATRIX_INDENT_TYPE
 	
 	def find_matching_bracket(s, start):
 		"""找到与start位置的'['匹配的']'位置"""
@@ -84,15 +91,35 @@ def format_matlab_matrix(code_string, indent_spaces=None, alignment='left', form
 			# 将列宽向上舍入到actual_indent_spaces的倍数
 			col_widths[i] = ((col_widths[i] // actual_indent_spaces) + 1) * actual_indent_spaces
 		
+		# 如果使用制表符缩进，需要将列宽度转换为制表符数量
+		if actual_indent_type == 'tab':
+			for i in range(num_cols):
+				# 将空格宽度转换为制表符数量，每个制表符相当于actual_indent_spaces个空格
+				col_widths[i] = col_widths[i] // actual_indent_spaces
+		
 		# 格式化每一行，根据指定的对齐方式对齐数字
 		formatted_rows = []
 		for row in matrix:
 			formatted_elements = []
 			for i in range(len(row)):
-				if alignment == 'right':
-					formatted_elements.append(row[i].rjust(col_widths[i]))
-				else:  # 默认左对齐
-					formatted_elements.append(row[i].ljust(col_widths[i]))
+				if actual_indent_type == 'tab':
+					# 使用制表符进行对齐
+					if alignment == 'right':
+						# 计算需要的制表符数量
+						elem_width = len(row[i])
+						tabs_needed = max(0, col_widths[i] - (elem_width // actual_indent_spaces))
+						formatted_elements.append(row[i] + '\t' * tabs_needed)
+					else:  # 默认左对齐
+						# 计算需要的制表符数量
+						elem_width = len(row[i])
+						tabs_needed = max(0, col_widths[i] - (elem_width // actual_indent_spaces))
+						formatted_elements.append(row[i] + '\t' * tabs_needed)
+				else:
+					# 使用空格进行对齐
+					if alignment == 'right':
+						formatted_elements.append(row[i].rjust(col_widths[i]))
+					else:  # 默认左对齐
+						formatted_elements.append(row[i].ljust(col_widths[i]))
 			formatted_rows.append(''.join(formatted_elements))
 		
 		# 组合成最终的矩阵字符串
@@ -102,7 +129,7 @@ def format_matlab_matrix(code_string, indent_spaces=None, alignment='left', form
 		else:
 			# 多行矩阵
 			result = '[\n'
-			indent = ' ' * actual_indent_spaces
+			indent = '\t' if actual_indent_type == 'tab' else ' ' * actual_indent_spaces
 			for row in formatted_rows:
 				result += indent + row + '\n'
 			result += ']'
